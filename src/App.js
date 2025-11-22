@@ -56,6 +56,31 @@ export default function App() {
   const [watched, setWatched] = useState(tempWatchedData);
   const [isLoading, setIsLoading] = useState(false);
   const query = "interstellar";
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchMovies() {
+      setIsLoading(true);
+      try {
+        const res = await axios.get(
+          `http://www.omdbapi.com/?apikey=${MY_API_KEY}&s=${query}`
+        );
+        if (res.data.Response === "False") {
+          throw new Error("Movie not found");
+        }
+        if (res.data.Search) {
+          setMovies(res.data.Search);
+          console.log(res.data.Search);
+        }
+      } catch (err) {
+        console.log("❌ ERROR AT FETCHING DATA: ", err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchMovies();
+  }, []);
 
   // useEffect(() => {
   //   const fetchMovie = async () => {
@@ -73,25 +98,6 @@ export default function App() {
   //   fetchMovie();
   // }, []);
 
-  useEffect(() => {
-    async function fetchMovies() {
-      setIsLoading(true);
-      try {
-        const res = await axios.get(
-          `http://www.omdbapi.com/?apikey=${MY_API_KEY}&s=${query}`
-        );
-        if (res.data.Search) {
-          setMovies(res.data.Search);
-          console.log(res.data.Search);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.log("❌ ERROR AT FETCHING DATA");
-      }
-    }
-    fetchMovies();
-  }, []);
-
   return (
     <>
       <Navbar>
@@ -100,7 +106,11 @@ export default function App() {
       </Navbar>
 
       <Main>
-        <Box>{isLoading ? <Loader /> : <MovieList movies={movies}></MovieList>} </Box>
+        <Box>
+          {isLoading && <Loader />}
+          {!isLoading && !error && <MovieList movies={movies} />}
+          {error && <ErrorMessage message={error} />}
+        </Box>
 
         <Box>
           <WatchedSummary watched={watched}></WatchedSummary>
@@ -113,6 +123,15 @@ export default function App() {
 
 function Loader() {
   return <p className="loader">Loading...</p>;
+}
+
+function ErrorMessage({ message }) {
+  return (
+    <p className="error">
+      <span>❌</span>
+      {message}
+    </p>
+  );
 }
 
 function Navbar({ children }) {
