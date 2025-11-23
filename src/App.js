@@ -55,12 +55,14 @@ export default function App() {
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
   const [isLoading, setIsLoading] = useState(false);
-  const query = "interstellar";
+  const tempQuery = "interstellar";
+  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchMovies() {
       setIsLoading(true);
+      setError("");
       try {
         const res = await axios.get(
           `http://www.omdbapi.com/?apikey=${MY_API_KEY}&s=${query}`
@@ -70,7 +72,6 @@ export default function App() {
         }
         if (res.data.Search) {
           setMovies(res.data.Search);
-          console.log(res.data.Search);
         }
       } catch (err) {
         console.log("❌ ERROR AT FETCHING DATA: ", err);
@@ -79,29 +80,18 @@ export default function App() {
         setIsLoading(false);
       }
     }
+    if (query.length < 3) {
+      setMovies([]);
+      setError("");
+      return;
+    }
     fetchMovies();
-  }, []);
-
-  // useEffect(() => {
-  //   const fetchMovie = async () => {
-  //     try {
-  //       const result = await axios.get(
-  //         `http://www.omdbapi.com/?apikey=${MY_API_KEY}&s=spiderman`
-  //       );
-  //       if (result.data.Search) {
-  //         setMovies(result.data.Search);
-  //       }
-  //     } catch (err) {
-  //       console.log("❌ ERROR AT FETCHING DATA");
-  //     }
-  //   };
-  //   fetchMovie();
-  // }, []);
+  }, [query]);
 
   return (
     <>
       <Navbar>
-        <Search></Search>
+        <Search query={query} setQuery={setQuery}></Search>
         <NumResults movies={movies}></NumResults>
       </Navbar>
 
@@ -151,9 +141,7 @@ function Logo() {
     </div>
   );
 }
-function Search() {
-  const [query, setQuery] = useState("");
-
+function Search({ query, setQuery }) {
   return (
     <input
       className="search"
