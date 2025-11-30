@@ -61,12 +61,14 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function fetchMovies() {
       setIsLoading(true);
       setError("");
       try {
         const res = await axios.get(
-          `http://www.omdbapi.com/?apikey=${MY_API_KEY}&s=${query}`
+          `http://www.omdbapi.com/?apikey=${MY_API_KEY}&s=${query}`,
+          { signal: controller.signal }
         );
         if (res.data.Response === "False") {
           throw new Error("Movie not found");
@@ -87,6 +89,9 @@ export default function App() {
       return;
     }
     fetchMovies();
+    return () => {
+      controller.abort();
+    };
   }, [query]);
 
   return (
@@ -190,6 +195,14 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     onAddWatched(newWatchedMovie);
     onCloseMovie();
   }
+
+  useEffect(() => {
+    if (!title) return;
+    document.title = `Movei | ${title}`;
+    return () => {
+      document.title = "usePopcorn";
+    };
+  }, [title]);
 
   return (
     <div className="details">
