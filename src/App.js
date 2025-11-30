@@ -75,14 +75,20 @@ export default function App() {
         }
         if (res.data.Search) {
           setMovies(res.data.Search);
+          setError("");
         }
+        setIsLoading(false);
       } catch (err) {
+        if (axios.isCancel(err)) {
+          console.log("❌ ERROR AT FETCHING DATA: ", err);
+          return;
+        }
         console.log("❌ ERROR AT FETCHING DATA: ", err);
         setError(err.message);
-      } finally {
         setIsLoading(false);
       }
     }
+
     if (query.length < 3) {
       setMovies([]);
       setError("");
